@@ -1,0 +1,94 @@
+# create index, advanced
+PUT productadvanced
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "ngram_analyzer": {
+          "tokenizer": "ngram_tokenizer"
+        }
+      },
+      "tokenizer": {
+        "ngram_tokenizer": {
+          "type": "ngram",
+          "min_gram": 3,
+          "max_gram": 5,
+          "token_chars": ["letter", "digit", "symbol"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "price": {
+          "type": "float"
+        },
+        "sold": {
+          "type": "integer",
+          "null_value": 0
+        },
+        "last_updated": {
+          "type": "date",
+          "format": "yyyy-MM-dd HH:mm:ss"
+        },
+        "seller": {
+          "type": "nested",
+          "properties": {
+            "name": { 
+              "type": "keyword"
+            },
+            "feedback": {
+              "type": "float"
+            }
+          }
+        },
+        "condition": {
+          "type": "keyword"
+        },
+        "material": {
+          "type": "text",
+          "fields": {
+            "raw": { 
+              "type": "keyword"
+            }
+          }
+        },
+        "sleeve_style": {
+          "type": "text",
+          "fields": {
+            "raw": { 
+              "type": "keyword"
+            }
+          }
+        },
+        "country": {
+          "type": "text",
+          "fields": {
+            "raw": { 
+              "type": "keyword"
+            },
+            "completion": {
+              "type": "completion"
+            }
+          }
+        },
+        "title": {
+          "type": "text",
+          "fields": {
+            "ngram": {
+              "type": "text",
+              "analyzer": "ngram_analyzer"
+            },
+            "completion": {
+              "type": "completion"
+            }
+          }
+        },
+        "description": {
+          "type": "text"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+curl -X POST 'localhost:9200/product/_bulk' -H 'Content-Type: application/json' --data-binary @bulk.json
+
+curl -X POST 'localhost:9200/productadvanced/_bulk' -H 'Content-Type: application/json' --data-binary @bulkadvanced.json

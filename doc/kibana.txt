@@ -1,0 +1,21 @@
+# get all
+GET product/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# delete all
+POST /product/_delete_by_query
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+# see index config
+GET product
+
+# delete index
+DELETE product

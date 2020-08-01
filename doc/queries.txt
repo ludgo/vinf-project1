@@ -1,0 +1,323 @@
+# 1
+# cotton sexy vest, not Chinese, max. $5, sold at least 10 pcs
+
+GET product/_search
+{
+  "query": { 
+    "bool": { 
+      "filter": [
+        { "term": { "title": "sexy" } }
+      ],
+      "must": [
+        { "match": { "material": "cotton" } },
+        { "exists" : { "field" : "country" } }
+      ],
+      "must_not": [
+        { "match": { "country": "china" } }
+      ],
+      "should": [ 
+        { "match": { "title": "vest" } },
+        { "range": { "sold": { "gte": 10 } } },
+        { "range": { "price": { "lte": 5 } } }
+      ]
+    }
+  }
+}
+
+GET product/_search
+{
+  "query": { 
+    "bool": { 
+      "filter": [
+        { "term": { "title": "sexy" } }
+      ],
+      "must": [
+        { "match": { "material": "cotton" } }
+      ],
+      "must_not": [
+        { "match": { "country": "china" } },
+        { "match": { "description": "china" } }
+      ],
+      "should": [ 
+        { "match": { "title": "vest" } },
+        { "range": { "sold": { "gte": 10 } } },
+        { "range": { "price": { "lte": 5 } } }
+      ]
+    }
+  }
+}
+
+
+# 2
+# for products at least $3, find highest average price sellers with at least 3 products
+
+GET product/_search
+{
+  "size": 0,
+  "query": { 
+    "bool": {
+      "filter": [
+        { "range": { "price": { "gte": 3 } } }
+      ]
+    }
+  },
+  "aggs" : {
+    "1_nested": {
+       "nested": {
+          "path": "seller"
+       },
+       "aggs": {
+         "2_sellers": {
+           "terms": {
+              "field": "seller.name",
+              "order": { "3_reversenested>4_avgprice": "desc" },
+              "min_doc_count": 3
+           }, 
+           "aggs": {
+             "3_reversenested": {
+                "reverse_nested": {},
+                "aggs": {
+                  "4_avgprice": {
+                    "avg": {
+                      "field": "price"
+                    }
+                  }
+                }
+              }
+            }
+          }
+       }
+    }
+  }
+}
+
+
+# 3
+# last year's products, red or blue, not yellow, not purple, "long sleeve" also in title or description but in title with higher priority
+
+GET product/_search
+{
+  "query": {
+    "bool": {
+      "filter": { 
+        "range": { 
+          "last_updated": { 
+            "gte": 1506797723769, 
+            "format":"epoch_millis"
+          }
+        }
+      },
+      "must": {
+        "query_string" : {
+          "fields" : ["title^5", "description"],
+          "query" : "(long sleeve) AND (blue OR red) AND NOT (yellow OR purple)"
+        }        
+      }
+    }
+  }
+}
+
+
+# 4
+# autocomplete of title/country
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "lon",
+      "completion": {
+        "field": "title.completion"
+      }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "log",
+      "completion": {
+        "field": "title.completion"
+      }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "log",
+      "completion": {
+        "field": "title.completion",
+          "fuzzy": {
+            "fuzziness": 1
+          }
+      }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "log",
+      "completion": {
+          "field": "title.completion",
+          "fuzzy": {
+            "fuzziness": 1,
+            "min_length": 4
+          }
+        }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "bik",
+      "completion": {
+          "field": "title.completion"
+      }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "byk",
+      "completion": {
+          "field": "title.completion",
+          "fuzzy": {
+            "fuzziness": 1
+          }
+        }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "title_suggest": {
+      "prefix": "byk",
+      "completion": {
+          "field": "title.completion",
+          "fuzzy": {
+            "fuzziness": 1,
+            "prefix_length": 2
+          }
+        }
+    }
+  }
+}
+
+POST productadvanced/_search
+{
+  "suggest": {
+    "country_suggest": {
+      "prefix": "chi",
+      "completion": {
+          "field": "country.completion",
+          "skip_duplicates": true
+        }
+    }
+  }
+}
+
+
+# 5
+# 3-to-5-gram tokenizer of title
+
+GET product/_search
+{
+  "query": {
+    "match": {
+      "title": "bikini"
+    }
+  }
+}
+
+GET product/_search
+{
+  "query": {
+    "match": {
+      "title": "iki"
+    }
+  }
+}
+
+GET productadvanced/_search
+{
+  "query": {
+    "match": {
+      "title.ngram": "iki"
+    }
+  }
+}
+
+GET productadvanced/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "iki",
+      "fields": ["title^10", "title.ngram"]
+    }
+  }
+}
+
+GET productadvanced/_search
+{
+  "query": {
+    "match": {
+      "title": "ikini"
+    }
+  }
+}
+
+GET productadvanced/_search
+{
+  "query": {
+    "match": {
+      "title.ngram": "ikini"
+    }
+  }
+}
+
+
+# 6
+# selected price ranges of all individual materials
+
+GET product/_search
+{
+  "size": 0,
+  "aggs": {
+    "materials": {
+      "terms": {
+        "field": "material.raw"
+      },
+      "aggs": {
+        "price_ranges": {
+          "range": {
+            "field": "price",
+            "ranges": [
+              { "to": 1.0 },
+              { "from": 1.0, "to" : 5.0 },
+              { "from": 5.0, "to" : 10.0 },
+              { "from": 10.0, "to" : 50.0 },
+              { "from": 50.0 }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
